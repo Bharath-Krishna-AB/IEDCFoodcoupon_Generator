@@ -36,7 +36,15 @@ export default function SubmissionsView() {
     const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
 
     useEffect(() => {
+        // Initial fetch
         fetchRegistrations();
+
+        // Setup polling every 5 seconds since we are using REST API wrapper without WebSockets
+        const intervalId = setInterval(() => {
+            fetchRegistrations(false); // pass false to avoid showing loading state on refresh
+        }, 5000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     // Prevent body scrolling when any modal is open
@@ -53,9 +61,9 @@ export default function SubmissionsView() {
         };
     }, [selectedSubmission, verificationModalSubmission]);
 
-    const fetchRegistrations = async () => {
+    const fetchRegistrations = async (showLoadingState = true) => {
         try {
-            setLoading(true);
+            if (showLoadingState) setLoading(true);
             const { data: regs, error: fetchError } = await supabase
                 .from('registrations')
                 .select('*');
@@ -66,7 +74,7 @@ export default function SubmissionsView() {
             console.error('Error fetching registrations:', err);
             setError(err.message || 'Failed to load submissions.');
         } finally {
-            setLoading(false);
+            if (showLoadingState) setLoading(false);
         }
     };
 

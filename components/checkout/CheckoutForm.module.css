@@ -1,0 +1,274 @@
+.checkoutContainer {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 0 40px;
+    font-family: var(--font-family);
+}
+
+.header {
+    margin-bottom: 32px;
+}
+
+.title {
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.checkIcon {
+    width: 16px;
+    height: 16px;
+    color: #10B981;
+    /* Green check */
+}
+
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+.card {
+    background-color: var(--bg-card);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    margin-bottom: 32px;
+    border: 1px solid #f0f0f0;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.stepNumber {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent-purple);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.cardTitle {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    width: 100%;
+}
+
+.required {
+    color: #EF4444;
+    /* Red asterisk */
+}
+
+.optional {
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+.input {
+    background-color: #fafbfc;
+    border: 2px solid #eaeaea;
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    font-family: inherit;
+    outline: none;
+    text-align: left;
+}
+
+.input::placeholder {
+    color: #666666;
+}
+
+.input:focus {
+    border-color: var(--accent-purple);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(112, 62, 255, 0.1);
+}
+
+/* Payment Section */
+.paymentSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.qrCodeContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.qrCodePlaceholder {
+    width: 200px;
+    height: 200px;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.qrImage {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.upiPill {
+    background-color: #f7f9fa;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    color: #555;
+    border: 1px solid #eaeaea;
+}
+
+.uploadArea {
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #a0a0a0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.uploadArea:hover {
+    border-color: #888;
+    color: #666;
+}
+
+.confirmButton {
+    background: var(--accent-purple);
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 16px;
+    padding: 20px 48px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 16px;
+    box-shadow: 0 8px 25px rgba(112, 62, 255, 0.3);
+    width: auto;
+    min-width: 250px;
+}
+
+.confirmButton:hover {
+    transform: translateY(-2px) scale(1.02);
+    background: #622aec;
+    box-shadow: 0 12px 30px rgba(112, 62, 255, 0.4);
+}
+
+.returnLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #333333;
+    font-weight: 800;
+    font-size: 18px;
+    /* Larger font size as seen in screenshot */
+    padding-left: 8px;
+    letter-spacing: -0.5px;
+}
+
+.returnLink:hover {
+    color: #000000;
+}
+
+.totalFloating {
+    position: absolute;
+    top: 20px;
+    right: 0;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.totalLabel {
+    font-size: 10px;
+    font-weight: 800;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.totalAmount {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--accent-purple);
+    letter-spacing: -1px;
+}
+
+@media (max-width: 900px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .totalFloating {
+        position: static;
+        margin-bottom: 24px;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 24px;
+    }
+}

@@ -1,0 +1,88 @@
+.card {
+    background-color: var(--color-white);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.iconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-default {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+}
+
+.icon-green {
+    background-color: var(--color-green);
+    color: var(--text-green);
+}
+
+.icon-red {
+    background-color: var(--color-red);
+    color: var(--text-red);
+}
+
+.badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 100px;
+}
+
+.badge-default {
+    background-color: var(--color-green);
+    color: var(--text-green);
+}
+
+.badge-green {
+    background-color: var(--color-green);
+    color: var(--text-green);
+}
+
+.badge-red {
+    background-color: var(--color-red);
+    color: var(--text-red);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.amount {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}

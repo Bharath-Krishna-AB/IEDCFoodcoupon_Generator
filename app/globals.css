@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Colors */
+  --bg-body: #f7f9fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f8f9fa;
+  /* slightly off white or just use white for sidebar if needed, let's use white for components */
+  --text-primary: #1e1e1e;
+  --text-secondary: #757575;
+  --text-tertiary: #a0a0a0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-green: #e6f6ec;
+  --text-green: #25a153;
+  --color-red: #fff1f0;
+  --text-red: #e12d39;
+
+  /* Brand Accents */
+  --accent-purple: #703eff;
+  --accent-cyan: #00E5FF;
+  --accent-lime: #CCFF00;
+
+  --border-color: #ebebeb;
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.03);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* If dark mode is ever needed, we override here. For now, referencing a light theme explicitly. */
+}
+
+/* Resets */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
 }

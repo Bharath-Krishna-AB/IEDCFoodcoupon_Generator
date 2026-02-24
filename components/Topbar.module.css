@@ -1,0 +1,135 @@
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+}
+
+.searchContainer {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-white);
+    padding: 12px 20px;
+    border-radius: 100px;
+    width: 300px;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.searchIcon {
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.searchInput {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.searchInput::placeholder {
+    color: var(--text-tertiary);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.iconButton {
+    background-color: var(--color-white);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.iconButton:hover {
+    color: var(--text-primary);
+}
+
+.notificationDot {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-red);
+    border-radius: 50%;
+}
+
+.profileBadge {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-white);
+    border-radius: 100px;
+    padding: 6px 6px 6px 20px;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.profileInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.profileName {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.profileStatus {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    letter-spacing: 0.5px;
+}
+
+.profileAvatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-black);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.logoutButton {
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-red);
+    color: var(--text-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+    background-color: #ffdbdb;
+}
+
+.logoutButton svg {
+    width: 14px;
+    height: 14px;
+}

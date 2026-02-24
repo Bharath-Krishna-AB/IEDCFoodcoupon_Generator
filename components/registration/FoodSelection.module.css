@@ -1,0 +1,156 @@
+.selectionContainer {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.cardsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 600px) {
+    .cardsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.optionCard {
+    background: var(--bg-card);
+    border: 2px solid transparent;
+    border-radius: var(--radius-xl);
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.optionCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+.optionCard.active {
+    border-color: var(--accent-purple);
+    background-color: #fafafa;
+}
+
+.iconContainer {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--bg-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: -8px;
+}
+
+.optionDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.optionName {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.optionPrice {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text-secondary);
+}
+
+.active .optionPrice {
+    color: var(--accent-purple);
+}
+
+.radioIndicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.active .radioIndicator {
+    border-color: var(--accent-purple);
+}
+
+.radioInner {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--accent-purple);
+}
+
+.actionContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.proceedButton {
+    background: var(--color-black);
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 16px;
+    padding: 20px 48px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.proceedButton:hover:not(.disabled) {
+    transform: scale(1.02);
+    background: #1e1e1e;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.proceedButton.disabled {
+    background: #e0e0e0;
+    color: #666666 !important;
+    cursor: not-allowed;
+    box-shadow: none;
+}

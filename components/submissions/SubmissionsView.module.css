@@ -116,20 +116,20 @@
 
 .badge {
     display: inline-flex;
-    padding: 6px 12px;
+    padding: 6px 16px;
     border-radius: 100px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
 .badgeGreen {
-    background-color: var(--color-green);
-    color: var(--text-green);
+    background-color: #e6f6ec;
+    color: #2e8b57;
 }
 
 .badgeRed {
-    background-color: var(--color-red);
-    color: var(--text-red);
+    background-color: #fdf0f0;
+    color: #dc3545;
 }
 
 .transactionId {
@@ -166,22 +166,21 @@
 }
 
 .viewButton {
-    background: var(--color-black);
-    border: none;
-    color: #ffffff !important;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    color: var(--text-secondary) !important;
     font-weight: 700;
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 13px;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 .viewButton:hover {
-    transform: scale(1.05);
-    background: #1e1e1e;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    background: #f4f5f5;
+    border-color: #c0c0c0;
+    color: var(--text-primary) !important;
 }
 
 .emptyState {
@@ -189,4 +188,278 @@
     padding: 48px !important;
     color: var(--text-secondary);
     font-size: 15px;
+}
+
+/* Tabs */
+.tabsContainer {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 0px;
+}
+
+.tab {
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    /* Pull down to overlap the container border */
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    color: var(--text-primary);
+}
+
+.activeTab {
+    color: #703eff;
+    border-bottom-color: #703eff;
+}
+
+/* Verify Button */
+.verifyButton {
+    background-color: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.verifyButton:hover {
+    background-color: #d1fae5;
+    border-color: #34d399;
+    color: #047857;
+}
+
+/* Modal Styles */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 24px;
+    backdrop-filter: blur(8px);
+}
+
+.modalContent {
+    background: #ffffff;
+    padding: 48px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.modalClose {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: #f4f5f5;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modalClose:hover {
+    background: #e5e7eb;
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.modalTitle {
+    margin: 0 0 32px 0;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+}
+
+.modalGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+    .modalGrid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}
+
+.modalSection h3 {
+    margin: 0 0 20px 0;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.modalSection p {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modalSection p strong {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modalProof {
+    margin-bottom: 40px;
+}
+
+.modalProof h3 {
+    margin: 0 0 20px 0;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 12px;
+}
+
+.proofImageContainer {
+    width: 100%;
+    max-height: 480px;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid #eaeaea;
+    background: #fafafb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.proofImage {
+    max-width: 100%;
+    max-height: 448px;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 16px;
+    padding-top: 32px;
+    border-top: 1px solid #eaeaea;
+}
+
+.verificationActionGroup {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.verificationInputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.codeInput {
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 15px;
+    font-family: monospace;
+    font-weight: 600;
+    letter-spacing: 2px;
+    width: 200px;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #fafafb;
+    color: var(--text-primary);
+}
+
+.codeInput:focus {
+    border-color: var(--color-black);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    background: #fff;
+}
+
+.errorText {
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.verifyButtonLarge {
+    background-color: var(--accent-lime);
+    color: var(--color-black);
+    border: none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(212, 255, 0, 0.3);
+}
+
+.verifyButtonLarge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(212, 255, 0, 0.4);
+}
+
+.closeButton {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+    background-color: #f4f5f5;
+    color: var(--text-primary);
+    border-color: #c0c0c0;
 }

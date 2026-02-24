@@ -44,7 +44,7 @@ export default function FoodSelection({ initialSelection, onProceed }: FoodSelec
                     </div>
                     <div className={styles.optionDetails}>
                         <h3 className={styles.optionName}>Vegetarian</h3>
-                        <p className={styles.optionPrice}>₹100</p>
+                        <p className={styles.optionPrice}>₹50</p>
                     </div>
                     <div className={styles.radioIndicator}>
                         {selected === 'veg' && <div className={styles.radioInner} />}
@@ -65,7 +65,7 @@ export default function FoodSelection({ initialSelection, onProceed }: FoodSelec
                     </div>
                     <div className={styles.optionDetails}>
                         <h3 className={styles.optionName}>Non-Vegetarian</h3>
-                        <p className={styles.optionPrice}>₹200</p>
+                        <p className={styles.optionPrice}>₹80</p>
                     </div>
                     <div className={styles.radioIndicator}>
                         {selected === 'non-veg' && <div className={styles.radioInner} />}

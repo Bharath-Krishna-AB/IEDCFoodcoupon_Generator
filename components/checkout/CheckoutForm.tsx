@@ -51,23 +51,21 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
         setIsSubmitting(true);
 
         try {
-            // 1. Upload screenshot
-            const fileExt = screenshotFile.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-            const { data: uploadData, error: uploadError } = await supabase
-                .storage
-                .from('payment_screenshots')
-                .upload(fileName, screenshotFile);
+            // 1. Upload screenshot via server-side API route
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', screenshotFile);
 
-            if (uploadError) throw new Error('Failed to upload screenshot: ' + uploadError.message);
+            const uploadRes = await fetch('/api/upload-screenshot', {
+                method: 'POST',
+                body: uploadFormData,
+            });
 
-            // Get the public URL
-            const { data: publicUrlData } = supabase
-                .storage
-                .from('payment_screenshots')
-                .getPublicUrl(fileName);
+            if (!uploadRes.ok) {
+                const uploadErr = await uploadRes.json();
+                throw new Error('Failed to upload screenshot: ' + (uploadErr.error || 'Unknown error'));
+            }
 
-            const screenshotUrl = publicUrlData.publicUrl;
+            const { url: screenshotUrl } = await uploadRes.json();
 
             // 2. Check for duplicate UTR
             const { data: existingReg } = await supabase

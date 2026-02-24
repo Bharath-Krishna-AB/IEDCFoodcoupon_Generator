@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './SubmissionsView.module.css';
 import { supabase } from '@/lib/supabase';
 
@@ -11,6 +11,7 @@ interface Registration {
     email: string;
     college: string;
     food_preference: string;
+    total_price: number;
     payment_ref: string;
     payment_status: 'Verified' | 'Pending' | 'Rejected' | 'pending';
     verification_code: number | null;
@@ -30,30 +31,13 @@ export default function SubmissionsView() {
     const [verificationInput, setVerificationInput] = useState('');
     const [verificationError, setVerificationError] = useState('');
 
-    // New state for the dedicated OTP Verification popup
+    // OTP Verification popup
     const [verificationModalSubmission, setVerificationModalSubmission] = useState<Registration | null>(null);
-    // Use an array to store individual digits for the OTP UI
     const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verifySuccess, setVerifySuccess] = useState<Registration | null>(null);
 
-    useEffect(() => {
-        fetchRegistrations();
-    }, []);
-
-    // Prevent body scrolling when any modal is open
-    useEffect(() => {
-        if (selectedSubmission || verificationModalSubmission) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-
-        // Cleanup on unmount
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [selectedSubmission, verificationModalSubmission]);
-
-    const fetchRegistrations = async () => {
+    const fetchRegistrations = useCallback(async () => {
         try {
             setLoading(true);
             const { data: regs, error: fetchError } = await supabase
@@ -62,23 +46,40 @@ export default function SubmissionsView() {
 
             if (fetchError) throw fetchError;
             setData(regs || []);
+            setError('');
         } catch (err: any) {
             console.error('Error fetching registrations:', err);
             setError(err.message || 'Failed to load submissions.');
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchRegistrations();
+        // Auto-refresh every 15 seconds for live data
+        const interval = setInterval(fetchRegistrations, 15000);
+        return () => clearInterval(interval);
+    }, [fetchRegistrations]);
+
+    // Prevent body scrolling when any modal is open
+    useEffect(() => {
+        if (selectedSubmission || verificationModalSubmission || verifySuccess) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [selectedSubmission, verificationModalSubmission, verifySuccess]);
 
     const handleMainTableVerifyClick = (submission: Registration, e: React.MouseEvent) => {
         e.stopPropagation();
         if (submission.verification_code) {
-            // Open OTP modal if they have a code
             setVerificationModalSubmission(submission);
             setOtpValues(Array(6).fill(''));
             setVerificationError('');
+            setVerifySuccess(null);
         } else {
-            // Proceed with standard confirmation if no code required
             handleVerify(submission.id, undefined);
         }
     };
@@ -86,7 +87,6 @@ export default function SubmissionsView() {
     const handleVerify = async (id: string, e?: React.MouseEvent, codeToVerify?: number) => {
         if (e) e.stopPropagation();
 
-        // If a code is provided (from the OTP modal), check it
         const targetSubmission = verificationModalSubmission || selectedSubmission;
 
         if (codeToVerify !== undefined && targetSubmission) {
@@ -99,7 +99,10 @@ export default function SubmissionsView() {
             return;
         }
 
+        setIsVerifying(true);
+
         try {
+            // 1. Update registration as verified (only is_verified — safe for any schema)
             const { error: updateError } = await supabase
                 .from('registrations')
                 .update({ is_verified: true })
@@ -107,7 +110,49 @@ export default function SubmissionsView() {
 
             if (updateError) throw updateError;
 
-            setData(data.map(d => d.id === id ? { ...d, is_verified: true } : d));
+            // 2. Try to log to verifications table (non-blocking — table may not exist)
+            const targetReg = data.find(d => d.id === id);
+            if (targetReg) {
+                // Parse veg/non-veg counts from food_preference string
+                let vegCount = 0;
+                let nonVegCount = 0;
+                const parts = targetReg.food_preference?.split(', ') || [];
+                parts.forEach(part => {
+                    const num = parseInt(part);
+                    if (!isNaN(num)) {
+                        if (part.toLowerCase().includes('non-veg')) {
+                            nonVegCount = num;
+                        } else if (part.toLowerCase().includes('veg')) {
+                            vegCount = num;
+                        }
+                    }
+                });
+
+                try {
+                    await supabase.from('verifications').insert([{
+                        registration_id: id,
+                        team_name: targetReg.team_name,
+                        verification_code: targetReg.verification_code,
+                        food_preference: targetReg.food_preference,
+                        veg_count: vegCount,
+                        non_veg_count: nonVegCount,
+                        verified_by: 'admin',
+                    }]);
+                } catch (logErr) {
+                    console.warn('Verifications log insert failed (table may not exist):', logErr);
+                }
+            }
+
+            // 3. Immediately update local state
+            const updatedData = data.map(d => d.id === id ? { ...d, is_verified: true } : d);
+            setData(updatedData);
+
+            // 4. Show success in modal
+            if (verificationModalSubmission && verificationModalSubmission.id === id) {
+                setVerifySuccess({ ...verificationModalSubmission, is_verified: true });
+                setVerificationModalSubmission(null);
+                setOtpValues(Array(6).fill(''));
+            }
 
             // Update details modal if open
             if (selectedSubmission && selectedSubmission.id === id) {
@@ -115,20 +160,18 @@ export default function SubmissionsView() {
                 setVerificationInput('');
             }
 
-            // Close OTP modal if open
-            if (verificationModalSubmission && verificationModalSubmission.id === id) {
-                setVerificationModalSubmission(null);
-                setOtpValues(Array(6).fill(''));
-            }
+            // 5. Refresh from Supabase for accurate data
+            await fetchRegistrations();
 
         } catch (err: any) {
             console.error('Verify error:', err);
-            alert('Failed to verify: ' + err.message);
+            setVerificationError('Failed to verify: ' + err.message);
+        } finally {
+            setIsVerifying(false);
         }
     };
 
     const handleOtpChange = (index: number, value: string) => {
-        // Only allow numbers
         if (!/^\d*$/.test(value)) return;
 
         const newOtp = [...otpValues];
@@ -149,6 +192,51 @@ export default function SubmissionsView() {
             prevInput?.focus();
         }
     };
+
+    const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '').substring(0, 6);
+        if (pastedData) {
+            const newOtp = [...otpValues];
+            pastedData.split('').forEach((char, i) => {
+                newOtp[i] = char;
+            });
+            setOtpValues(newOtp);
+            const nextFocusIndex = Math.min(pastedData.length, 5);
+            document.getElementById(`otp-input-${nextFocusIndex}`)?.focus();
+        }
+    };
+
+    // Dynamic counts
+    const pendingCount = data.filter(d => !d.is_verified).length;
+    const verifiedCount = data.filter(d => d.is_verified).length;
+
+    // Dynamic food totals
+    const totalVegMeals = data.reduce((sum, d) => {
+        const parts = d.food_preference?.split(', ') || [];
+        let veg = 0;
+        parts.forEach(part => {
+            const num = parseInt(part);
+            if (!isNaN(num) && part.toLowerCase().includes('veg') && !part.toLowerCase().includes('non-veg')) {
+                veg = num;
+            }
+        });
+        return sum + veg;
+    }, 0);
+
+    const totalNonVegMeals = data.reduce((sum, d) => {
+        const parts = d.food_preference?.split(', ') || [];
+        let nonVeg = 0;
+        parts.forEach(part => {
+            const num = parseInt(part);
+            if (!isNaN(num) && part.toLowerCase().includes('non-veg')) {
+                nonVeg = num;
+            }
+        });
+        return sum + nonVeg;
+    }, 0);
+
+    const totalRevenue = data.reduce((sum, d) => sum + (d.total_price || 0), 0);
 
     const filteredData = data.filter(sub => {
         const matchesSearch = sub.team_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,6 +272,41 @@ export default function SubmissionsView() {
                 </div>
             </div>
 
+            {/* Dynamic Stats Bar */}
+            <div style={{
+                display: 'flex',
+                gap: '16px',
+                marginBottom: '20px',
+                flexWrap: 'wrap'
+            }}>
+                {[
+                    { label: 'Total Teams', value: data.length, color: '#6366f1' },
+                    { label: 'Pending', value: pendingCount, color: '#f59e0b' },
+                    { label: 'Verified', value: verifiedCount, color: '#10b981' },
+                    { label: 'Veg Meals', value: totalVegMeals, color: '#22c55e' },
+                    { label: 'Non-Veg', value: totalNonVegMeals, color: '#ef4444' },
+                    { label: 'Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}`, color: '#8b5cf6' },
+                ].map(stat => (
+                    <div key={stat.label} style={{
+                        flex: '1 1 130px',
+                        background: 'var(--bg-card, #fff)',
+                        borderRadius: '12px',
+                        padding: '14px 18px',
+                        border: '1px solid var(--border-color, #e5e7eb)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                    }}>
+                        <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-secondary, #94a3b8)', fontWeight: '600' }}>
+                            {stat.label}
+                        </span>
+                        <span style={{ fontSize: '22px', fontWeight: '700', color: stat.color }}>
+                            {loading ? '...' : stat.value}
+                        </span>
+                    </div>
+                ))}
+            </div>
+
             {error && (
                 <div style={{ padding: '16px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '8px', marginBottom: '24px', fontWeight: '500' }}>
                     {error}
@@ -195,13 +318,35 @@ export default function SubmissionsView() {
                     className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
                     onClick={() => setActiveTab('pending')}
                 >
-                    Pending Food
+                    Pending Food ({pendingCount})
                 </button>
                 <button
                     className={`${styles.tab} ${activeTab === 'verified' ? styles.activeTab : ''}`}
                     onClick={() => setActiveTab('verified')}
                 >
-                    Verified (Received)
+                    Verified ({verifiedCount})
+                </button>
+                <button
+                    onClick={fetchRegistrations}
+                    style={{
+                        marginLeft: 'auto',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-color, #e5e7eb)',
+                        background: 'var(--bg-card, #fff)',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: 'var(--text-secondary, #64748b)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                    </svg>
+                    Refresh
                 </button>
             </div>
 
@@ -226,7 +371,6 @@ export default function SubmissionsView() {
                             </tr>
                         )}
                         {!loading && filteredData.map(submission => {
-                            // Normalize status for capitalized badges
                             const statusLabel = submission.payment_status?.charAt(0).toUpperCase() + submission.payment_status?.slice(1) || 'Pending';
 
                             return (
@@ -246,11 +390,10 @@ export default function SubmissionsView() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
                                             {submission.food_preference?.split(', ').map(pref => {
                                                 const isVeg = pref.toLowerCase().includes(' veg') && !pref.toLowerCase().includes('non-veg');
-                                                // Handling legacy "veg"/"non-veg" strings:
                                                 const isLegacyVeg = pref === 'veg';
                                                 const displayPref = pref === 'veg' ? '1 Veg' : pref === 'non-veg' ? '1 Non-Veg' : pref;
 
-                                                if (displayPref.startsWith('0 ')) return null; // hide 0 counts
+                                                if (displayPref.startsWith('0 ')) return null;
 
                                                 return (
                                                     <span key={pref} className={`${styles.badge} ${isVeg || isLegacyVeg ? styles.badgeGreen : styles.badgeRed}`}>
@@ -344,7 +487,6 @@ export default function SubmissionsView() {
                             </div>
                         )}
 
-                        {/* Removed the inline verification logic from the detail modal to encourage use of the dedicated OTP modal */}
                         <div className={styles.modalActions}>
                             <button className={styles.closeButton} onClick={() => {
                                 setSelectedSubmission(null);
@@ -373,7 +515,7 @@ export default function SubmissionsView() {
                             </p>
                         </div>
 
-                        <div className={styles.otpInputContainer}>
+                        <div className={styles.otpInputContainer} onPaste={handleOtpPaste}>
                             {otpValues.map((digit, index) => (
                                 <input
                                     key={index}
@@ -386,6 +528,7 @@ export default function SubmissionsView() {
                                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                                     className={styles.otpDigitInput}
                                     autoFocus={index === 0}
+                                    disabled={isVerifying}
                                 />
                             ))}
                         </div>
@@ -398,6 +541,7 @@ export default function SubmissionsView() {
 
                         <button
                             className={`${styles.otpVerifyBtn} ${otpValues.join('').length === 6 ? styles.otpVerifyBtnActive : ''}`}
+                            disabled={isVerifying}
                             onClick={(e) => {
                                 const fullCode = otpValues.join('');
                                 if (fullCode.length !== 6) {
@@ -407,7 +551,73 @@ export default function SubmissionsView() {
                                 handleVerify(verificationModalSubmission.id, e, parseInt(fullCode, 10));
                             }}
                         >
-                            Confirm Identity & Serve Food
+                            {isVerifying ? 'Verifying...' : 'Confirm Identity & Serve Food'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Verification Success Modal */}
+            {verifySuccess && (
+                <div className={styles.modalOverlay} onClick={() => setVerifySuccess(null)}>
+                    <div className={styles.otpModalContent} onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #10B981, #059669)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 20px',
+                            boxShadow: '0 6px 24px rgba(16, 185, 129, 0.3)'
+                        }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+
+                        <h2 style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text-primary, #1a1a2e)', margin: '0 0 8px' }}>
+                            Verified Successfully!
+                        </h2>
+                        <p style={{ fontSize: '14px', color: 'var(--text-secondary, #64748b)', margin: '0 0 24px' }}>
+                            Food can be served to team <strong>{verifySuccess.team_name}</strong>
+                        </p>
+
+                        <div style={{
+                            background: 'var(--bg-card, #f8fafc)',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            marginBottom: '24px',
+                            border: '1px solid var(--border-color, #e5e7eb)',
+                            textAlign: 'left'
+                        }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+                                <div>
+                                    <span style={{ color: 'var(--text-secondary, #94a3b8)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Team</span>
+                                    <strong>{verifySuccess.team_name}</strong>
+                                </div>
+                                <div>
+                                    <span style={{ color: 'var(--text-secondary, #94a3b8)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>College</span>
+                                    <strong>{verifySuccess.college}</strong>
+                                </div>
+                                <div>
+                                    <span style={{ color: 'var(--text-secondary, #94a3b8)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Food</span>
+                                    <strong>{verifySuccess.food_preference}</strong>
+                                </div>
+                                <div>
+                                    <span style={{ color: 'var(--text-secondary, #94a3b8)', display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Phone</span>
+                                    <strong>{verifySuccess.phone}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            className={styles.otpVerifyBtn}
+                            style={{ background: '#10b981', width: '100%' }}
+                            onClick={() => setVerifySuccess(null)}
+                        >
+                            Done
                         </button>
                     </div>
                 </div>

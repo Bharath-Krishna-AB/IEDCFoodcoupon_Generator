@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { generateCode, generateQRCodeURL } from '@/lib/coupon';
+import { generateQRCodeURL } from '@/lib/coupon';
 import { buildCouponEmailHTML } from '@/lib/email-template';
-import { saveRegistration, getRegistrationCounts } from '@/lib/mock-data';
 
 interface SendCouponBody {
     name: string;
@@ -10,7 +9,9 @@ interface SendCouponBody {
     phone: string;
     college: string;
     teamName: string;
-    foodPreference: 'veg' | 'non-veg';
+    foodPreference: string;
+    registrationId?: string;
+    verificationCode?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
         const body: SendCouponBody = await request.json();
 
         // Validate required fields
-        const { name, email, phone, college, teamName, foodPreference } = body;
+        const { name, email, phone, college, teamName, foodPreference, verificationCode } = body;
         if (!name || !email || !phone || !college || !teamName || !foodPreference) {
             return NextResponse.json(
                 { error: 'All fields are required.' },
@@ -35,42 +36,55 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Generate coupon code
-        const couponCode = generateCode();
+        // Use the verification code passed from the frontend (already generated and stored in Supabase)
+        const couponCode = verificationCode || Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Save to mock data store (returns registration with unique id)
-        const registration = saveRegistration({
-            name,
-            email,
-            phone,
-            college,
-            teamName,
-            foodPreference,
-            couponCode,
-        });
-
-        // Generate QR code URL using the unique registration ID
+        // Generate QR code URL
         const qrCodeURL = generateQRCodeURL({
-            id: registration.id,
+            id: body.registrationId || 'unknown',
             couponCode,
         });
 
-        // Get current registration counts
-        const counts = getRegistrationCounts();
+        // Parse team-specific veg/non-veg counts from the food preference string
+        // The frontend sends foodPreference as the full string like "1 Veg, 2 Non-Veg"
+        // or as just 'veg' / 'non-veg' for legacy
+        let teamVegCount = 0;
+        let teamNonVegCount = 0;
+
+        if (body.foodPreference) {
+            const pref = body.foodPreference;
+            if (pref === 'veg') {
+                teamVegCount = 1;
+            } else if (pref === 'non-veg') {
+                teamNonVegCount = 1;
+            } else {
+                // Parse from string like "1 Veg, 2 Non-Veg"
+                const parts = pref.split(', ');
+                parts.forEach((part: string) => {
+                    const num = parseInt(part);
+                    if (!isNaN(num)) {
+                        if (part.toLowerCase().includes('non-veg')) {
+                            teamNonVegCount = num;
+                        } else if (part.toLowerCase().includes('veg')) {
+                            teamVegCount = num;
+                        }
+                    }
+                });
+            }
+        }
 
         // Build email HTML
         const html = buildCouponEmailHTML({
-            name,
             teamName,
+            college,
             couponCode,
             qrCodeURL,
-            foodPreference,
-            totalRegistrations: counts.total,
-            vegCount: counts.veg,
-            nonVegCount: counts.nonVeg,
+            teamVegCount,
+            teamNonVegCount,
         });
 
         // Send email via Resend
+        console.log(`[Email] Attempting to send to: ${email}`);
         const { data, error } = await resend.emails.send({
             from: 'IEDC Food Coupon <onboarding@resend.dev>',
             to: [email],
@@ -79,13 +93,16 @@ export async function POST(request: NextRequest) {
         });
 
         if (error) {
-            console.error('Resend error:', error);
+            console.error('[Email] Resend error:', JSON.stringify(error, null, 2));
+            console.error('[Email] NOTE: With onboarding@resend.dev, Resend only allows sending to the email you signed up with.');
+            console.error('[Email] To send to any email, verify a custom domain at https://resend.com/domains');
             return NextResponse.json(
-                { error: 'Failed to send email. Please try again.' },
+                { error: 'Failed to send email. Resend free tier only allows sending to your signup email. Verify a custom domain to send to others.' },
                 { status: 500 }
             );
         }
 
+        console.log(`[Email] Successfully sent to ${email}, ID: ${data?.id}`);
         return NextResponse.json({
             success: true,
             couponCode,

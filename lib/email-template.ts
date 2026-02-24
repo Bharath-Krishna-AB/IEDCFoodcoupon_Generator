@@ -1,17 +1,14 @@
 interface CouponEmailParams {
-  name: string;
   teamName: string;
+  college: string;
   couponCode: string;
   qrCodeURL: string;
-  foodPreference: 'veg' | 'non-veg';
-  totalRegistrations: number;
-  vegCount: number;
-  nonVegCount: number;
+  teamVegCount: number;
+  teamNonVegCount: number;
 }
 
 export function buildCouponEmailHTML(params: CouponEmailParams): string {
-  const { name, teamName, couponCode, qrCodeURL, foodPreference, totalRegistrations, vegCount, nonVegCount } = params;
-  const foodLabel = foodPreference === 'veg' ? '🟢 Vegetarian' : '🔴 Non-Vegetarian';
+  const { teamName, college, couponCode, qrCodeURL, teamVegCount, teamNonVegCount } = params;
 
   return `
 <!DOCTYPE html>
@@ -44,7 +41,7 @@ export function buildCouponEmailHTML(params: CouponEmailParams): string {
               
               <!-- Greeting -->
               <p style="margin:0 0 20px;color:#2d3748;font-size:15px;line-height:1.6;">
-                Hi <strong>${name}</strong>,<br />
+                Hi <strong>${teamName}</strong>,<br />
                 Your food coupon has been generated successfully! Present this at the food counter to claim your meal.
               </p>
 
@@ -54,45 +51,36 @@ export function buildCouponEmailHTML(params: CouponEmailParams): string {
                   <td style="padding:16px 20px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Name</td>
-                      </tr>
-                      <tr>
-                        <td style="color:#2d3748;font-size:15px;font-weight:600;padding-bottom:12px;">${name}</td>
-                      </tr>
-                      <tr>
-                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Team</td>
+                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Team Name</td>
                       </tr>
                       <tr>
                         <td style="color:#2d3748;font-size:15px;font-weight:600;padding-bottom:12px;">${teamName}</td>
                       </tr>
                       <tr>
-                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">Meal Type</td>
+                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:4px;">College</td>
                       </tr>
                       <tr>
-                        <td style="color:#2d3748;font-size:15px;font-weight:600;">${foodLabel}</td>
+                        <td style="color:#2d3748;font-size:15px;font-weight:600;">${college}</td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
 
-              <!-- Registration Counts -->
+              <!-- Team Meal Counts -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#edf2f7;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
                 <tr>
                   <td style="padding:16px 20px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;">Total Registrations</td>
-                      </tr>
-                      <tr>
-                        <td style="color:#2d3748;font-size:20px;font-weight:700;padding-bottom:14px;">${totalRegistrations}</td>
+                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:12px;">Your Meal Order</td>
                       </tr>
                       <tr>
                         <td style="padding-bottom:6px;">
                           <table cellpadding="0" cellspacing="0">
                             <tr>
                               <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-right:24px;">🟢 Veg</td>
-                              <td style="color:#2d3748;font-size:15px;font-weight:600;">${vegCount}</td>
+                              <td style="color:#2d3748;font-size:18px;font-weight:700;">${teamVegCount}</td>
                             </tr>
                           </table>
                         </td>
@@ -102,7 +90,7 @@ export function buildCouponEmailHTML(params: CouponEmailParams): string {
                           <table cellpadding="0" cellspacing="0">
                             <tr>
                               <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-right:24px;">🔴 Non-Veg</td>
-                              <td style="color:#2d3748;font-size:15px;font-weight:600;">${nonVegCount}</td>
+                              <td style="color:#2d3748;font-size:18px;font-weight:700;">${teamNonVegCount}</td>
                             </tr>
                           </table>
                         </td>

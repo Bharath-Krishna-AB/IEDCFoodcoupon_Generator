@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import styles from './CheckoutForm.module.css';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +19,10 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+
+    // Success state
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [successCode, setSuccessCode] = useState('');
 
     const totalPrice = (vegCount * 50) + (nonVegCount * 80);
 
@@ -68,7 +73,7 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
             // 3. Insert into database
             const payload = {
                 team_name: teamName,
-                full_name: teamName, // Required by DB but we use Team Name
+                full_name: teamName,
                 phone: phone,
                 email: email,
                 college: college,
@@ -81,13 +86,37 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
                 is_verified: false
             };
 
-            const { error: insertError } = await supabase
+            const { data: insertedData, error: insertError } = await supabase
                 .from('registrations')
                 .insert([payload]);
 
             if (insertError) throw new Error('Failed to save registration: ' + insertError.message);
 
-            // Success!
+            // 4. Send verification email via API
+            try {
+                const registrationId = insertedData?.[0]?.id || '';
+                await fetch('/api/send-coupon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: teamName,
+                        email: email,
+                        phone: phone,
+                        college: college,
+                        teamName: teamName,
+                        foodPreference: `${vegCount} Veg, ${nonVegCount} Non-Veg`,
+                        registrationId: registrationId,
+                        verificationCode: verificationCode.toString(),
+                    }),
+                });
+            } catch (emailErr) {
+                // Email sending failure shouldn't block registration
+                console.warn('Email sending failed (registration still saved):', emailErr);
+            }
+
+            // 5. Show success
+            setSuccessCode(verificationCode.toString());
+            setIsSuccess(true);
             onSuccess();
 
         } catch (err: any) {
@@ -99,6 +128,116 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
 
     const increment = (setter: React.Dispatch<React.SetStateAction<number>>, current: number) => setter(current + 1);
     const decrement = (setter: React.Dispatch<React.SetStateAction<number>>, current: number) => setter(current > 0 ? current - 1 : 0);
+
+    const handleNewRegistration = () => {
+        setTeamName('');
+        setPhone('');
+        setEmail('');
+        setCollege('');
+        setVegCount(0);
+        setNonVegCount(0);
+        setUpiRef('');
+        setScreenshotFile(null);
+        setIsSubmitting(false);
+        setError('');
+        setIsSuccess(false);
+        setSuccessCode('');
+    };
+
+    // Success screen
+    if (isSuccess) {
+        return (
+            <div className={styles.checkoutContainer}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '60px 40px',
+                    textAlign: 'center',
+                    gap: '24px',
+                    minHeight: '400px'
+                }}>
+                    <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+                    }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '700', color: 'var(--text-primary, #1a1a2e)', margin: '0 0 8px' }}>
+                            Registration Successful!
+                        </h2>
+                        <p style={{ fontSize: '15px', color: 'var(--text-secondary, #64748b)', margin: 0, lineHeight: 1.6 }}>
+                            A verification email has been sent to <strong>{email}</strong>
+                        </p>
+                    </div>
+
+                    <div style={{
+                        background: 'var(--bg-card, #f8fafc)',
+                        border: '2px dashed var(--border-color, #e2e8f0)',
+                        borderRadius: '16px',
+                        padding: '24px 40px',
+                        marginTop: '8px'
+                    }}>
+                        <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-secondary, #94a3b8)', margin: '0 0 8px' }}>
+                            Verification Code
+                        </p>
+                        <p style={{
+                            fontSize: '36px',
+                            fontWeight: '800',
+                            letterSpacing: '8px',
+                            color: 'var(--text-primary, #1a1a2e)',
+                            margin: 0,
+                            fontFamily: 'var(--font-geist-mono), monospace'
+                        }}>
+                            {successCode}
+                        </p>
+                    </div>
+
+                    <div style={{
+                        background: 'var(--bg-card, #f0f9ff)',
+                        borderRadius: '12px',
+                        padding: '16px 24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        border: '1px solid var(--border-color, #bae6fd)'
+                    }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="16" x2="12" y2="12" />
+                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                        <span style={{ fontSize: '13px', color: '#0369a1' }}>
+                            Share this code with the participant. It will be used for food verification.
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={handleNewRegistration}
+                        className={styles.confirmButton}
+                        style={{ marginTop: '8px' }}
+                    >
+                        Register Another Team
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.checkoutContainer}>

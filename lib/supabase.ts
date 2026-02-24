@@ -4,6 +4,9 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const isConfigured = SUPABASE_URL.length > 0 && SUPABASE_ANON_KEY.length > 0;
 const configError = new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local');
 
+// Trim any trailing slash from URL
+const baseUrl = SUPABASE_URL.replace(/\/+$/, '');
+
 const headers = {
     'apikey': SUPABASE_ANON_KEY,
     'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -12,13 +15,36 @@ const headers = {
 };
 
 
-// Extremely lightweight wrapper to mimic Supabase-js syntax using REST API
+// Lightweight wrapper to mimic Supabase-js syntax using REST API
 export const supabase = {
     from: (table: string) => ({
         select: async (query = '*') => {
             if (!isConfigured) return { data: null, error: configError };
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${query}&order=created_at.desc`, { headers });
+                const res = await fetch(`${baseUrl}/rest/v1/${table}?select=${query}&order=created_at.desc`, { headers });
+                if (!res.ok) throw new Error(await res.text());
+                return { data: await res.json(), error: null };
+            } catch (err: any) {
+                return { data: null, error: err };
+            }
+        },
+        // Select with a single equality filter: e.g. selectWhere('verification_code', '123456')
+        selectWhere: async (column: string, value: any, query = '*') => {
+            if (!isConfigured) return { data: null, error: configError };
+            try {
+                const res = await fetch(`${baseUrl}/rest/v1/${table}?select=${query}&${column}=eq.${value}`, { headers });
+                if (!res.ok) throw new Error(await res.text());
+                return { data: await res.json(), error: null };
+            } catch (err: any) {
+                return { data: null, error: err };
+            }
+        },
+        // Select with multiple filters: e.g. selectFilter({ is_verified: false, payment_status: 'pending' })
+        selectFilter: async (filters: Record<string, any>, query = '*') => {
+            if (!isConfigured) return { data: null, error: configError };
+            try {
+                const filterStr = Object.entries(filters).map(([k, v]) => `${k}=eq.${v}`).join('&');
+                const res = await fetch(`${baseUrl}/rest/v1/${table}?select=${query}&${filterStr}`, { headers });
                 if (!res.ok) throw new Error(await res.text());
                 return { data: await res.json(), error: null };
             } catch (err: any) {
@@ -28,7 +54,7 @@ export const supabase = {
         insert: async (payload: any[]) => {
             if (!isConfigured) return { data: null, error: configError };
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                const res = await fetch(`${baseUrl}/rest/v1/${table}`, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify(payload)
@@ -43,7 +69,7 @@ export const supabase = {
             eq: async (column: string, value: any) => {
                 if (!isConfigured) return { data: null, error: configError };
                 try {
-                    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${value}`, {
+                    const res = await fetch(`${baseUrl}/rest/v1/${table}?${column}=eq.${value}`, {
                         method: 'PATCH',
                         headers,
                         body: JSON.stringify(payload)
@@ -61,7 +87,7 @@ export const supabase = {
             upload: async (path: string, file: File) => {
                 if (!isConfigured) return { data: null, error: configError };
                 try {
-                    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+                    const res = await fetch(`${baseUrl}/storage/v1/object/${bucket}/${path}`, {
                         method: 'POST',
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
@@ -78,7 +104,7 @@ export const supabase = {
             },
             getPublicUrl: (path: string) => ({
                 data: {
-                    publicUrl: `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`
+                    publicUrl: `${baseUrl}/storage/v1/object/public/${bucket}/${path}`
                 }
             })
         })

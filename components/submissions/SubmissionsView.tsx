@@ -30,13 +30,18 @@ export default function SubmissionsView() {
     const [verificationInput, setVerificationInput] = useState('');
     const [verificationError, setVerificationError] = useState('');
 
+    // New state for the dedicated OTP Verification popup
+    const [verificationModalSubmission, setVerificationModalSubmission] = useState<Registration | null>(null);
+    // Use an array to store individual digits for the OTP UI
+    const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
+
     useEffect(() => {
         fetchRegistrations();
     }, []);
 
-    // Prevent body scrolling when modal is open
+    // Prevent body scrolling when any modal is open
     useEffect(() => {
-        if (selectedSubmission) {
+        if (selectedSubmission || verificationModalSubmission) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -46,7 +51,7 @@ export default function SubmissionsView() {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [selectedSubmission]);
+    }, [selectedSubmission, verificationModalSubmission]);
 
     const fetchRegistrations = async () => {
         try {
@@ -65,17 +70,32 @@ export default function SubmissionsView() {
         }
     };
 
+    const handleMainTableVerifyClick = (submission: Registration, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (submission.verification_code) {
+            // Open OTP modal if they have a code
+            setVerificationModalSubmission(submission);
+            setOtpValues(Array(6).fill(''));
+            setVerificationError('');
+        } else {
+            // Proceed with standard confirmation if no code required
+            handleVerify(submission.id, undefined);
+        }
+    };
+
     const handleVerify = async (id: string, e?: React.MouseEvent, codeToVerify?: number) => {
         if (e) e.stopPropagation();
 
-        // If a code is provided (from the modal), check it against the submission
-        if (codeToVerify !== undefined && selectedSubmission) {
-            if (codeToVerify !== selectedSubmission.verification_code) {
+        // If a code is provided (from the OTP modal), check it
+        const targetSubmission = verificationModalSubmission || selectedSubmission;
+
+        if (codeToVerify !== undefined && targetSubmission) {
+            if (codeToVerify !== targetSubmission.verification_code) {
                 setVerificationError('Invalid verification code.');
                 return;
             }
             setVerificationError('');
-        } else if (!confirm('Mark this team as verified (Food Received)?')) {
+        } else if (!codeToVerify && !confirm('Mark this team as verified (Food Received)?')) {
             return;
         }
 
@@ -89,15 +109,44 @@ export default function SubmissionsView() {
 
             setData(data.map(d => d.id === id ? { ...d, is_verified: true } : d));
 
-            // Update the selected submission so the modal updates immediately
+            // Update details modal if open
             if (selectedSubmission && selectedSubmission.id === id) {
                 setSelectedSubmission({ ...selectedSubmission, is_verified: true });
                 setVerificationInput('');
             }
 
+            // Close OTP modal if open
+            if (verificationModalSubmission && verificationModalSubmission.id === id) {
+                setVerificationModalSubmission(null);
+                setOtpValues(Array(6).fill(''));
+            }
+
         } catch (err: any) {
             console.error('Verify error:', err);
             alert('Failed to verify: ' + err.message);
+        }
+    };
+
+    const handleOtpChange = (index: number, value: string) => {
+        // Only allow numbers
+        if (!/^\d*$/.test(value)) return;
+
+        const newOtp = [...otpValues];
+        newOtp[index] = value;
+        setOtpValues(newOtp);
+        setVerificationError('');
+
+        // Auto focus next input
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-input-${index + 1}`);
+            nextInput?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-input-${index - 1}`);
+            prevInput?.focus();
         }
     };
 
@@ -231,7 +280,7 @@ export default function SubmissionsView() {
                                             {!submission.is_verified && (
                                                 <button
                                                     className={styles.verifyButton}
-                                                    onClick={(e) => handleVerify(submission.id, e)}
+                                                    onClick={(e) => handleMainTableVerifyClick(submission, e)}
                                                 >
                                                     Verify
                                                 </button>
@@ -295,52 +344,71 @@ export default function SubmissionsView() {
                             </div>
                         )}
 
+                        {/* Removed the inline verification logic from the detail modal to encourage use of the dedicated OTP modal */}
                         <div className={styles.modalActions}>
-                            {!selectedSubmission.is_verified && selectedSubmission.verification_code ? (
-                                <div className={styles.verificationActionGroup}>
-                                    <div className={styles.verificationInputWrapper}>
-                                        <input
-                                            type="text"
-                                            placeholder="Enter 6-digit code..."
-                                            className={styles.codeInput}
-                                            value={verificationInput}
-                                            onChange={(e) => {
-                                                setVerificationInput(e.target.value.replace(/\D/g, '').slice(0, 6));
-                                                setVerificationError('');
-                                            }}
-                                            maxLength={6}
-                                        />
-                                        {verificationError && <span className={styles.errorText}>{verificationError}</span>}
-                                    </div>
-                                    <button
-                                        className={styles.verifyButtonLarge}
-                                        onClick={(e) => {
-                                            if (verificationInput.length !== 6) {
-                                                setVerificationError('Please enter a 6-digit code.');
-                                                return;
-                                            }
-                                            handleVerify(selectedSubmission.id, e, parseInt(verificationInput, 10));
-                                        }}
-                                    >
-                                        Verify & Mark As Received
-                                    </button>
-                                </div>
-                            ) : !selectedSubmission.is_verified ? (
-                                <button
-                                    className={styles.verifyButtonLarge}
-                                    onClick={(e) => {
-                                        handleVerify(selectedSubmission.id, e);
-                                    }}
-                                >
-                                    Verify (No Code Required)
-                                </button>
-                            ) : null}
                             <button className={styles.closeButton} onClick={() => {
                                 setSelectedSubmission(null);
-                                setVerificationInput('');
-                                setVerificationError('');
                             }}>Close</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Dedicated OTP Verification Modal */}
+            {verificationModalSubmission && (
+                <div className={styles.modalOverlay} onClick={() => setVerificationModalSubmission(null)}>
+                    <div className={styles.otpModalContent} onClick={(e) => e.stopPropagation()}>
+                        <button className={styles.modalClose} onClick={() => setVerificationModalSubmission(null)}>&times;</button>
+
+                        <div className={styles.otpHeader}>
+                            <div className={styles.otpIconContainer}>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    <path d="M9 12l2 2 4-4" />
+                                </svg>
+                            </div>
+                            <h2 className={styles.modalTitle} style={{ marginBottom: '8px', textAlign: 'center' }}>Food Coupon <br />Verification</h2>
+                            <p className={styles.subtitle} style={{ textAlign: 'center', marginBottom: '32px' }}>
+                                Enter the 6-digit pin for team <strong>{verificationModalSubmission.team_name}</strong>
+                            </p>
+                        </div>
+
+                        <div className={styles.otpInputContainer}>
+                            {otpValues.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    id={`otp-input-${index}`}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={1}
+                                    value={digit}
+                                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                    className={styles.otpDigitInput}
+                                    autoFocus={index === 0}
+                                />
+                            ))}
+                        </div>
+
+                        {verificationError && (
+                            <div className={styles.otpErrorBounce}>
+                                <span className={styles.errorTextLarge}>{verificationError}</span>
+                            </div>
+                        )}
+
+                        <button
+                            className={`${styles.otpVerifyBtn} ${otpValues.join('').length === 6 ? styles.otpVerifyBtnActive : ''}`}
+                            onClick={(e) => {
+                                const fullCode = otpValues.join('');
+                                if (fullCode.length !== 6) {
+                                    setVerificationError('Please enter all 6 digits.');
+                                    return;
+                                }
+                                handleVerify(verificationModalSubmission.id, e, parseInt(fullCode, 10));
+                            }}
+                        >
+                            Confirm Identity & Serve Food
+                        </button>
                     </div>
                 </div>
             )}

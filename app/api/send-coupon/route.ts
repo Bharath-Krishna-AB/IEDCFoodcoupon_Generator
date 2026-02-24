@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         // Send email via Resend
         console.log(`[Email] Attempting to send to: ${email}`);
         const { data, error } = await resend.emails.send({
-            from: 'IEDC Food Coupon <onboarding@resend.dev>',
+            from: 'IEDC Food Coupon <noreply@mail.gallilmedia.com>',
             to: [email],
             subject: `Your IEDC Food Coupon — Code: ${couponCode}`,
             html,

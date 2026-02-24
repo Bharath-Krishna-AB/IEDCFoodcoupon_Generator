@@ -18,7 +18,7 @@
   --text-red: #e12d39;
 
   /* Brand Accents */
-  --accent-purple: #703eff;
+  --accent-purple: #703eff !important;
   --accent-cyan: #00E5FF;
   --accent-lime: #CCFF00;
 

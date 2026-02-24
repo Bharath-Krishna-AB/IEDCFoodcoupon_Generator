@@ -58,7 +58,7 @@
 .stepNumber {
     width: 32px;
     height: 32px;
-    background-color: var(--accent-purple);
+    background-color: #703eff;
     color: #fff;
     border-radius: 50%;
     display: flex;
@@ -130,7 +130,7 @@
 }
 
 .input:focus {
-    border-color: var(--accent-purple);
+    border-color: #703eff;
     background-color: #fff;
     box-shadow: 0 0 0 4px rgba(112, 62, 255, 0.1);
 }
@@ -193,7 +193,7 @@
 }
 
 .confirmButton {
-    background: var(--accent-purple);
+    background: #703eff;
     color: #ffffff !important;
     font-weight: 800;
     font-size: 16px;
@@ -255,7 +255,7 @@
 .totalAmount {
     font-size: 32px;
     font-weight: 900;
-    color: var(--accent-purple);
+    color: #703eff;
     letter-spacing: -1px;
 }
 

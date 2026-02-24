@@ -17,6 +17,7 @@ interface Registration {
     verification_code: number;
     is_verified: boolean;
     created_at: string;
+    screenshot_url?: string;
 }
 
 type ViewState = 'scanning' | 'loading' | 'details' | 'result';
@@ -303,6 +304,17 @@ export default function QRScannerView() {
                         </div>
                     </div>
 
+                    {registration.screenshot_url && (
+                        <div className={styles.screenshotContainer}>
+                            <p className={styles.screenshotLabel}>Payment Screenshot</p>
+                            <img
+                                src={registration.screenshot_url}
+                                alt="Payment Proof"
+                                className={styles.screenshotImage}
+                            />
+                        </div>
+                    )}
+
                     <div className={styles.buttonGroup}>
                         <button className={styles.backButton} onClick={handleBack}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -347,8 +359,8 @@ export default function QRScannerView() {
 
             <div className={styles.resultCard}>
                 <div className={`${styles.resultIcon} ${resultType === 'success' ? styles.resultIconSuccess :
-                        resultType === 'warning' ? styles.resultIconWarning :
-                            styles.resultIconError
+                    resultType === 'warning' ? styles.resultIconWarning :
+                        styles.resultIconError
                     }`}>
                     {resultType === 'success' ? (
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

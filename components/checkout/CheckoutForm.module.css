@@ -135,6 +135,45 @@
     box-shadow: 0 0 0 4px rgba(112, 62, 255, 0.1);
 }
 
+.tagsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tag {
+    background-color: #f0ebff;
+    color: #703eff;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(112, 62, 255, 0.2);
+}
+
+.tagRemove {
+    background: none;
+    border: none;
+    color: #703eff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    opacity: 0.7;
+}
+
+.tagRemove:hover {
+    opacity: 1;
+    background-color: rgba(112, 62, 255, 0.1);
+}
+
 /* Payment Section */
 .paymentSection {
     display: flex;

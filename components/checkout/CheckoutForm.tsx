@@ -11,6 +11,8 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [college, setCollege] = useState('');
+    const [teamMembers, setTeamMembers] = useState<string[]>([]);
+    const [currentMember, setCurrentMember] = useState('');
     const [vegCount, setVegCount] = useState(0);
     const [nonVegCount, setNonVegCount] = useState(0);
 
@@ -68,7 +70,7 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
             // 3. Insert into database
             const payload = {
                 team_name: teamName,
-                full_name: teamName, // Required by DB but we use Team Name
+                full_name: teamMembers.length > 0 ? `${teamName} (Members: ${teamMembers.join(', ')})` : teamName,
                 phone: phone,
                 email: email,
                 college: college,
@@ -91,14 +93,32 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
             onSuccess();
 
         } catch (err: any) {
-            console.error('Submission error:', err);
-            setError(err.message || 'An error occurred during submission.');
+            console.error('Submission error full details:', err);
+            if (err.message) console.error('Error message:', err.message);
+            if (err.details) console.error('Error details:', err.details);
+            if (err.hint) console.error('Error hint:', err.hint);
+            setError(err.message || 'An error occurred during submission. Check console for details.');
             setIsSubmitting(false);
         }
     };
 
     const increment = (setter: React.Dispatch<React.SetStateAction<number>>, current: number) => setter(current + 1);
     const decrement = (setter: React.Dispatch<React.SetStateAction<number>>, current: number) => setter(current > 0 ? current - 1 : 0);
+
+    const handleAddMember = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const trimmed = currentMember.trim();
+            if (trimmed && !teamMembers.includes(trimmed)) {
+                setTeamMembers([...teamMembers, trimmed]);
+                setCurrentMember('');
+            }
+        }
+    };
+
+    const handleRemoveMember = (memberToRemove: string) => {
+        setTeamMembers(teamMembers.filter(m => m !== memberToRemove));
+    };
 
     return (
         <div className={styles.checkoutContainer}>
@@ -128,11 +148,46 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
                         </div>
 
                         <div className={styles.form}>
-                            <div className={styles.formGroup}>
-                                <label className={styles.label}>
-                                    Team Name <span className={styles.required}>*</span>
-                                </label>
-                                <input type="text" className={styles.input} placeholder="Enter your team name" value={teamName} onChange={e => setTeamName(e.target.value)} required disabled={isSubmitting} />
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>
+                                        Team Name <span className={styles.required}>*</span>
+                                    </label>
+                                    <input type="text" className={styles.input} placeholder="Enter your team name" value={teamName} onChange={e => setTeamName(e.target.value)} required disabled={isSubmitting} />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>
+                                        Extra Members <span className={styles.optional}>(Optional)</span>
+                                    </label>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <input
+                                            type="text"
+                                            className={styles.input}
+                                            placeholder="Type name & press Enter"
+                                            value={currentMember}
+                                            onChange={e => setCurrentMember(e.target.value)}
+                                            onKeyDown={handleAddMember}
+                                            disabled={isSubmitting}
+                                        />
+                                        {teamMembers.length > 0 && (
+                                            <div className={styles.tagsContainer}>
+                                                {teamMembers.map((member, idx) => (
+                                                    <span key={idx} className={styles.tag}>
+                                                        {member}
+                                                        <button
+                                                            type="button"
+                                                            className={styles.tagRemove}
+                                                            onClick={(e) => { e.preventDefault(); handleRemoveMember(member); }}
+                                                            aria-label={`Remove ${member}`}
+                                                        >
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className={styles.formRow}>

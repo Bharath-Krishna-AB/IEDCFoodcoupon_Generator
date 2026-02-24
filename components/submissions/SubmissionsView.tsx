@@ -157,8 +157,10 @@ export default function SubmissionsView() {
             sub.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesTab = activeTab === 'pending' ? !sub.is_verified : sub.is_verified;
+        // Filter out rejected items (only showing pending and verified)
+        const isNotRejected = sub.payment_status?.toLowerCase() !== 'rejected';
 
-        return matchesSearch && matchesTab;
+        return matchesSearch && matchesTab && isNotRejected;
     });
 
     return (
@@ -248,9 +250,22 @@ export default function SubmissionsView() {
                                                 const isVeg = pref.toLowerCase().includes(' veg') && !pref.toLowerCase().includes('non-veg');
                                                 // Handling legacy "veg"/"non-veg" strings:
                                                 const isLegacyVeg = pref === 'veg';
-                                                const displayPref = pref === 'veg' ? '1 Veg' : pref === 'non-veg' ? '1 Non-Veg' : pref;
 
-                                                if (displayPref.startsWith('0 ')) return null; // hide 0 counts
+                                                // Handle text formatting based on the new design (e.g. "1\nNON-VEG")
+                                                let displayPref: React.ReactNode = pref;
+                                                if (pref === 'veg' || (pref.toLowerCase().includes(' veg') && !pref.toLowerCase().includes('non-veg'))) {
+                                                    displayPref = pref === 'veg' ? '1 VEG' : pref.toUpperCase();
+                                                } else if (pref === 'non-veg' || pref.toLowerCase().includes('non-veg')) {
+                                                    const count = pref === 'non-veg' ? '1' : pref.split(' ')[0];
+                                                    displayPref = (
+                                                        <>
+                                                            {count}<br />NON-<br />VEG
+                                                        </>
+                                                    );
+                                                }
+
+                                                // hide 0 counts gracefully
+                                                if (typeof displayPref === 'string' && displayPref.startsWith('0 ')) return null;
 
                                                 return (
                                                     <span key={pref} className={`${styles.badge} ${isVeg || isLegacyVeg ? styles.badgeGreen : styles.badgeRed}`}>
@@ -268,11 +283,6 @@ export default function SubmissionsView() {
                                             <span className={`${styles.statusBadge} ${styles['status' + statusLabel]}`}>
                                                 {statusLabel}
                                             </span>
-                                            {submission.verification_code && (
-                                                <div className={styles.userContact} style={{ marginTop: '4px', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                                                    Code: {submission.verification_code}
-                                                </div>
-                                            )}
                                         </div>
                                     </td>
                                     <td>

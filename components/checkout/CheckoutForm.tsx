@@ -31,6 +31,13 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                         <form className={styles.form}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
+                                    Team Name <span className={styles.required}>*</span>
+                                </label>
+                                <input type="text" className={styles.input} placeholder="Enter your team name" />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>
                                     Full Name <span className={styles.required}>*</span>
                                 </label>
                                 <input type="text" className={styles.input} placeholder="Enter your full name" />

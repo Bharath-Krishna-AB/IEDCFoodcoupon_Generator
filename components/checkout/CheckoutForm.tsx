@@ -1,12 +1,107 @@
-import React from 'react';
+"use client"
+import React, { useState } from 'react';
 import styles from './CheckoutForm.module.css';
 
 interface CheckoutFormProps {
     totalPrice: number;
+    foodPreference: 'veg' | 'non-veg';
     onBack: () => void;
 }
 
-export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) {
+export default function CheckoutForm({ totalPrice, foodPreference, onBack }: CheckoutFormProps) {
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [college, setCollege] = useState('');
+    const [teamName, setTeamName] = useState('');
+    const [upiId, setUpiId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+
+    const handleSubmit = async () => {
+        // Clear previous error
+        setError('');
+
+        // Validate required fields
+        if (!name || !phone || !email || !college || !teamName || !upiId) {
+            setError('Please fill in all required fields.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const res = await fetch('/api/send-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    phone,
+                    college,
+                    teamName,
+                    foodPreference,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || 'Something went wrong.');
+                return;
+            }
+
+            setCouponCode(data.couponCode);
+            setSuccess(true);
+        } catch {
+            setError('Network error. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Success confirmation view
+    if (success) {
+        return (
+            <div className={styles.checkoutContainer}>
+                <div className={styles.header} style={{ textAlign: 'center' }}>
+                    <h1 className={styles.title}>🎉 Registration Confirmed!</h1>
+                    <p className={styles.subtitle}>
+                        Your food coupon has been sent to your email.
+                    </p>
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '32px 0',
+                    gap: '16px',
+                }}>
+                    <p style={{ color: '#718096', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1.5px', margin: 0 }}>
+                        Your Coupon Code
+                    </p>
+                    <div style={{
+                        backgroundColor: '#1a1a2e',
+                        color: '#ffffff',
+                        fontSize: '32px',
+                        fontWeight: 700,
+                        letterSpacing: '8px',
+                        padding: '16px 32px',
+                        borderRadius: '8px',
+                    }}>
+                        {couponCode}
+                    </div>
+                    <p style={{ color: '#718096', fontSize: '14px', marginTop: '8px', textAlign: 'center' }}>
+                        Check your email <strong>{email}</strong> for the QR code and full details.<br />
+                        Show the email at the food counter to claim your meal.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.checkoutContainer}>
             <div className={styles.header}>
@@ -20,6 +115,20 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                 </p>
             </div>
 
+            {error && (
+                <div style={{
+                    backgroundColor: '#fff5f5',
+                    color: '#c53030',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    marginBottom: '16px',
+                    border: '1px solid #feb2b2',
+                }}>
+                    {error}
+                </div>
+            )}
+
             <div className={styles.contentGrid}>
                 {/* Left Column: Personal Information */}
                 <div className={styles.leftColumn}>
@@ -28,12 +137,18 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                             <h2 className={styles.cardTitle}>Personal Information</h2>
                         </div>
 
-                        <form className={styles.form}>
+                        <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
                                     Full Name <span className={styles.required}>*</span>
                                 </label>
-                                <input type="text" className={styles.input} placeholder="Enter your full name" />
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Enter your full name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
                             </div>
 
                             <div className={styles.formRow}>
@@ -41,13 +156,25 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                                     <label className={styles.label}>
                                         Phone Number <span className={styles.required}>*</span>
                                     </label>
-                                    <input type="tel" className={styles.input} placeholder="+91..." />
+                                    <input
+                                        type="tel"
+                                        className={styles.input}
+                                        placeholder="+91..."
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                    />
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>
                                         Email Address <span className={styles.required}>*</span>
                                     </label>
-                                    <input type="email" className={styles.input} placeholder="your@email.com" />
+                                    <input
+                                        type="email"
+                                        className={styles.input}
+                                        placeholder="your@email.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
                                 </div>
                             </div>
 
@@ -55,7 +182,26 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                                 <label className={styles.label}>
                                     College <span className={styles.required}>*</span>
                                 </label>
-                                <input type="text" className={styles.input} placeholder="Enter your college name" />
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Enter your college name"
+                                    value={college}
+                                    onChange={(e) => setCollege(e.target.value)}
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>
+                                    Team Name <span className={styles.required}>*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Enter your team name"
+                                    value={teamName}
+                                    onChange={(e) => setTeamName(e.target.value)}
+                                />
                             </div>
                         </form>
                     </div>
@@ -83,12 +229,18 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                                 </div>
                             </div>
 
-                            <form className={styles.form} style={{ width: '100%', marginTop: '24px' }}>
+                            <form className={styles.form} style={{ width: '100%', marginTop: '24px' }} onSubmit={(e) => e.preventDefault()}>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>
                                         Your UPI ID / UTR Number <span className={styles.required}>*</span>
                                     </label>
-                                    <input type="text" className={styles.input} placeholder="e.g. name@upi or UTR..." />
+                                    <input
+                                        type="text"
+                                        className={styles.input}
+                                        placeholder="e.g. name@upi or UTR..."
+                                        value={upiId}
+                                        onChange={(e) => setUpiId(e.target.value)}
+                                    />
                                 </div>
 
                                 <div className={styles.formGroup}>
@@ -106,12 +258,20 @@ export default function CheckoutForm({ totalPrice, onBack }: CheckoutFormProps) 
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-                                    <button type="button" className={styles.confirmButton}>
-                                        Confirm Registration
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="5" y1="12" x2="19" y2="12" />
-                                            <polyline points="12 5 19 12 12 19" />
-                                        </svg>
+                                    <button
+                                        type="button"
+                                        className={styles.confirmButton}
+                                        onClick={handleSubmit}
+                                        disabled={loading}
+                                        style={loading ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                                    >
+                                        {loading ? 'Sending Coupon...' : 'Confirm Registration'}
+                                        {!loading && (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                                <polyline points="12 5 19 12 12 19" />
+                                            </svg>
+                                        )}
                                     </button>
                                 </div>
                             </form>

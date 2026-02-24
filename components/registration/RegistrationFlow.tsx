@@ -31,6 +31,7 @@ export default function RegistrationFlow() {
             {step === 2 && (
                 <CheckoutForm
                     totalPrice={totalPrice}
+                    foodPreference={foodPreference!}
                     onBack={handleBack}
                 />
             )}

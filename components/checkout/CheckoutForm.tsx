@@ -69,7 +69,16 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
 
             const screenshotUrl = publicUrlData.publicUrl;
 
-            // 2. Generate 6-digit verification code
+            // 2. Check for duplicate UTR
+            const { data: existingReg } = await supabase
+                .from('registrations')
+                .selectFilter({ payment_ref: upiRef.trim() }, 'team_name,payment_ref');
+
+            if (existingReg && existingReg.length > 0) {
+                throw new Error(`This UTR / UPI ID has already been used by team "${existingReg[0].team_name}". Please use a unique transaction reference.`);
+            }
+
+            // 3. Generate 6-digit verification code
             const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
             // 3. Insert into database
@@ -94,27 +103,24 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
 
             if (insertError) throw new Error('Failed to save registration: ' + insertError.message);
 
-            // 4. Send verification email via API
-            try {
-                const registrationId = insertedData?.[0]?.id || '';
-                await fetch('/api/send-coupon', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: teamName,
-                        email: email,
-                        phone: phone,
-                        college: college,
-                        teamName: teamName,
-                        foodPreference: `${vegCount} Veg, ${nonVegCount} Non-Veg`,
-                        registrationId: registrationId,
-                        verificationCode: verificationCode.toString(),
-                    }),
-                });
-            } catch (emailErr) {
-                // Email sending failure shouldn't block registration
+            // 4. Send verification email in background (fire-and-forget — don't block success screen)
+            const registrationId = insertedData?.[0]?.id || '';
+            fetch('/api/send-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: teamName,
+                    email: email,
+                    phone: phone,
+                    college: college,
+                    teamName: teamName,
+                    foodPreference: `${vegCount} Veg, ${nonVegCount} Non-Veg`,
+                    registrationId: registrationId,
+                    verificationCode: verificationCode.toString(),
+                }),
+            }).catch(emailErr => {
                 console.warn('Email sending failed (registration still saved):', emailErr);
-            }
+            });
 
             // 5. Show success
             setSuccessCode(verificationCode.toString());
@@ -398,7 +404,7 @@ export default function CheckoutForm({ onSuccess }: CheckoutFormProps) {
                         <div className={styles.paymentSection}>
                             <div className={styles.qrCodeContainer}>
                                 <div className={styles.qrCodePlaceholder}>
-                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=vishnumanjanath7-1@okaxis&pn=Vishnu&cu=INR&am=${totalPrice}`} alt="QR Code" className={styles.qrImage} />
+                                    <img src="/payment-qr.png" alt="UPI Payment QR Code" className={styles.qrImage} />
                                 </div>
                             </div>
 

@@ -189,8 +189,8 @@
 }
 
 .qrCodePlaceholder {
-    width: 200px;
-    height: 200px;
+    width: 280px;
+    height: 280px;
     border: 1px solid #eaeaea;
     border-radius: 16px;
     padding: 16px;
@@ -262,7 +262,6 @@
     color: #333333;
     font-weight: 800;
     font-size: 18px;
-    /* Larger font size as seen in screenshot */
     padding-left: 8px;
     letter-spacing: -0.5px;
 }
@@ -298,6 +297,7 @@
     letter-spacing: -1px;
 }
 
+/* ========== TABLET ========== */
 @media (max-width: 900px) {
     .contentGrid {
         grid-template-columns: 1fr;
@@ -309,6 +309,120 @@
         flex-direction: row;
         justify-content: space-between;
         padding: 24px;
+    }
+}
+
+/* ========== MOBILE ========== */
+@media (max-width: 600px) {
+    .checkoutContainer {
+        padding: 12px 0 24px;
+    }
+
+    .header {
+        margin-bottom: 20px;
+    }
+
+    .title {
+        font-size: 24px;
+        letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+        font-size: 12px;
+    }
+
+    .contentGrid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .card {
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 16px;
+    }
+
+    .cardHeader {
+        margin-bottom: 20px;
+    }
+
+    .cardTitle {
+        font-size: 17px;
+    }
+
+    .form {
+        gap: 14px;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .label {
+        font-size: 12px;
+        text-align: left;
+    }
+
+    .input {
+        padding: 14px 16px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+    .qrCodePlaceholder {
+        width: 220px;
+        height: 220px;
+        padding: 12px;
+    }
+
+    .uploadArea {
+        padding: 18px;
+        font-size: 13px;
+    }
+
+    .confirmButton {
+        width: 100%;
+        min-width: unset;
+        padding: 18px 24px;
+        font-size: 15px;
+    }
+
+    .totalFloating {
+        position: static;
+        margin-bottom: 16px;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-radius: 12px;
+    }
+
+    .totalAmount {
+        font-size: 26px;
+    }
+
+    .counterGroup {
+        padding: 10px 14px;
+    }
+
+    .counterLabel {
+        font-size: 13px;
+    }
+
+    .counterBtn {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    .counterValue {
+        font-size: 18px;
+        min-width: 28px;
+    }
+
+    .tag {
+        font-size: 12px;
+        padding: 5px 10px;
     }
 }
 

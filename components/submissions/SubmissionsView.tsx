@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './SubmissionsView.module.css';
 import { supabase } from '@/lib/supabase';
 
@@ -37,9 +37,31 @@ export default function SubmissionsView() {
     const [isVerifying, setIsVerifying] = useState(false);
     const [verifySuccess, setVerifySuccess] = useState<Registration | null>(null);
 
-    const fetchRegistrations = useCallback(async () => {
+    useEffect(() => {
+        // Initial fetch
+        fetchRegistrations();
+
+        // Setup polling every 5 seconds since we are using REST API wrapper without WebSockets
+        const intervalId = setInterval(() => {
+            fetchRegistrations(false); // pass false to avoid showing loading state on refresh
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // Prevent body scrolling when any modal is open
+    useEffect(() => {
+        if (selectedSubmission || verificationModalSubmission || verifySuccess) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [selectedSubmission, verificationModalSubmission, verifySuccess]);
+
+    const fetchRegistrations = async (showLoadingState = true) => {
         try {
-            setLoading(true);
+            if (showLoadingState) setLoading(true);
             const { data: regs, error: fetchError } = await supabase
                 .from('registrations')
                 .select('*');
@@ -51,26 +73,9 @@ export default function SubmissionsView() {
             console.error('Error fetching registrations:', err);
             setError(err.message || 'Failed to load submissions.');
         } finally {
-            setLoading(false);
+            if (showLoadingState) setLoading(false);
         }
-    }, []);
-
-    useEffect(() => {
-        fetchRegistrations();
-        // Auto-refresh every 15 seconds for live data
-        const interval = setInterval(fetchRegistrations, 15000);
-        return () => clearInterval(interval);
-    }, [fetchRegistrations]);
-
-    // Prevent body scrolling when any modal is open
-    useEffect(() => {
-        if (selectedSubmission || verificationModalSubmission || verifySuccess) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => { document.body.style.overflow = 'unset'; };
-    }, [selectedSubmission, verificationModalSubmission, verifySuccess]);
+    };
 
     const handleMainTableVerifyClick = (submission: Registration, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -161,7 +166,7 @@ export default function SubmissionsView() {
             }
 
             // 5. Refresh from Supabase for accurate data
-            await fetchRegistrations();
+            await fetchRegistrations(false);
 
         } catch (err: any) {
             console.error('Verify error:', err);
@@ -245,8 +250,10 @@ export default function SubmissionsView() {
             sub.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesTab = activeTab === 'pending' ? !sub.is_verified : sub.is_verified;
+        // Filter out rejected items (only showing pending and verified)
+        const isNotRejected = sub.payment_status?.toLowerCase() !== 'rejected';
 
-        return matchesSearch && matchesTab;
+        return matchesSearch && matchesTab && isNotRejected;
     });
 
     return (
@@ -327,7 +334,7 @@ export default function SubmissionsView() {
                     Verified ({verifiedCount})
                 </button>
                 <button
-                    onClick={fetchRegistrations}
+                    onClick={() => fetchRegistrations()}
                     style={{
                         marginLeft: 'auto',
                         padding: '8px 16px',
@@ -358,7 +365,7 @@ export default function SubmissionsView() {
                             <th>College</th>
                             <th>Meals</th>
                             <th>Transaction ID</th>
-                            <th>Status & Code</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -391,9 +398,22 @@ export default function SubmissionsView() {
                                             {submission.food_preference?.split(', ').map(pref => {
                                                 const isVeg = pref.toLowerCase().includes(' veg') && !pref.toLowerCase().includes('non-veg');
                                                 const isLegacyVeg = pref === 'veg';
-                                                const displayPref = pref === 'veg' ? '1 Veg' : pref === 'non-veg' ? '1 Non-Veg' : pref;
 
-                                                if (displayPref.startsWith('0 ')) return null;
+                                                // Handle text formatting based on the new design
+                                                let displayPref: React.ReactNode = pref;
+                                                if (pref === 'veg' || (pref.toLowerCase().includes(' veg') && !pref.toLowerCase().includes('non-veg'))) {
+                                                    displayPref = pref === 'veg' ? '1 VEG' : pref.toUpperCase();
+                                                } else if (pref === 'non-veg' || pref.toLowerCase().includes('non-veg')) {
+                                                    const count = pref === 'non-veg' ? '1' : pref.split(' ')[0];
+                                                    displayPref = (
+                                                        <>
+                                                            {count}<br />NON-<br />VEG
+                                                        </>
+                                                    );
+                                                }
+
+                                                // hide 0 counts gracefully
+                                                if (typeof displayPref === 'string' && displayPref.startsWith('0 ')) return null;
 
                                                 return (
                                                     <span key={pref} className={`${styles.badge} ${isVeg || isLegacyVeg ? styles.badgeGreen : styles.badgeRed}`}>
@@ -411,11 +431,6 @@ export default function SubmissionsView() {
                                             <span className={`${styles.statusBadge} ${styles['status' + statusLabel]}`}>
                                                 {statusLabel}
                                             </span>
-                                            {submission.verification_code && (
-                                                <div className={styles.userContact} style={{ marginTop: '4px', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                                                    Code: {submission.verification_code}
-                                                </div>
-                                            )}
                                         </div>
                                     </td>
                                     <td>

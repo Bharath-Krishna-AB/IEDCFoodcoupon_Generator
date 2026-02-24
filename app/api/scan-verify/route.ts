@@ -10,19 +10,25 @@ const headers = {
     'Prefer': 'return=representation',
 };
 
-// GET /api/scan-verify?id=<registration_id>
-// Look up a registration by its ID and return all details
+// GET /api/scan-verify?id=<registration_id> OR ?code=<verification_code>
+// Look up a registration by its ID or 6-digit code and return all details
 export async function GET(request: NextRequest) {
     try {
         const id = request.nextUrl.searchParams.get('id');
-        if (!id) {
-            return NextResponse.json({ error: 'Missing registration ID' }, { status: 400 });
+        const code = request.nextUrl.searchParams.get('code');
+
+        if (!id && !code) {
+            return NextResponse.json({ error: 'Missing registration ID or Code' }, { status: 400 });
         }
 
-        const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/registrations?select=*&id=eq.${id}`,
-            { headers }
-        );
+        let url = `${SUPABASE_URL}/rest/v1/registrations?select=*`;
+        if (id) {
+            url += `&id=eq.${id}`;
+        } else if (code) {
+            url += `&verification_code=eq.${code}`;
+        }
+
+        const res = await fetch(url, { headers });
 
         if (!res.ok) {
             const text = await res.text();

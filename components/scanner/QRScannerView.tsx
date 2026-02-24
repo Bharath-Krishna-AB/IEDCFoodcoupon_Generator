@@ -32,6 +32,7 @@ export default function QRScannerView() {
     const [resultType, setResultType] = useState<ResultType>('success');
     const [resultTitle, setResultTitle] = useState('');
     const [resultMessage, setResultMessage] = useState('');
+    const [manualCode, setManualCode] = useState('');
 
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const scannerContainerId = 'qr-scanner-region';
@@ -160,6 +161,38 @@ export default function QRScannerView() {
         };
     }, [viewState, startScanner, stopScanner]);
 
+    const handleManualSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!manualCode.trim()) return;
+
+        await stopScanner();
+        setViewState('loading');
+
+        try {
+            const res = await fetch(`/api/scan-verify?code=${encodeURIComponent(manualCode.trim())}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                setResultType('error');
+                setResultTitle('Not Found');
+                setResultMessage(data.error || 'Registration not found for this code.');
+                setViewState('result');
+                return;
+            }
+
+            setScannedId(data.registration.id);
+            setScannedCode(data.registration.verification_code);
+            setRegistration(data.registration);
+            setViewState('details');
+        } catch (err) {
+            console.error('Manual lookup error:', err);
+            setResultType('error');
+            setResultTitle('Error');
+            setResultMessage('Something went wrong while looking up this coupon.');
+            setViewState('result');
+        }
+    };
+
     const handleVerify = async () => {
         if (!scannedId || !scannedCode || !registration) return;
 
@@ -240,6 +273,28 @@ export default function QRScannerView() {
                             <span>Scanner active — waiting for QR code</span>
                         </div>
                     )}
+
+                    <div className={styles.manualDivider}>
+                        <span>OR</span>
+                    </div>
+
+                    <form className={styles.manualInputContainer} onSubmit={handleManualSubmit}>
+                        <input
+                            type="text"
+                            placeholder="Enter 6-digit code"
+                            className={styles.manualInput}
+                            value={manualCode}
+                            onChange={(e) => setManualCode(e.target.value)}
+                            maxLength={6}
+                        />
+                        <button
+                            type="submit"
+                            className={styles.manualSubmit}
+                            disabled={!manualCode.trim() || manualCode.length !== 6 || viewState === 'loading'}
+                        >
+                            Search
+                        </button>
+                    </form>
                 </div>
             </div>
         );

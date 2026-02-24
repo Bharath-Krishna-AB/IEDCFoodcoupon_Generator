@@ -81,6 +81,66 @@
     50% { opacity: 0.5; transform: scale(0.8); }
 }
 
+/* ===== Manual Input ===== */
+.manualDivider {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 0.1em;
+    margin: 10px 0 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.manualDivider span {
+    background: var(--bg-card);
+    padding: 0 10px;
+}
+
+.manualInputContainer {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+}
+
+.manualInput {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.manualInput:focus {
+    border-color: #703eff;
+    box-shadow: 0 0 0 3px rgba(112, 62, 255, 0.1);
+}
+
+.manualSubmit {
+    background: var(--color-black);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0 24px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.manualSubmit:hover:not(:disabled) {
+    background: #333;
+}
+
+.manualSubmit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* ===== Details Card ===== */
 .detailsCard {
     background: var(--bg-card);

@@ -1,5 +1,3 @@
-import QRCode from 'qrcode';
-
 /**
  * Generate a random 6-digit numeric coupon code.
  */
@@ -8,22 +6,16 @@ export function generateCode(): string {
 }
 
 /**
- * Generate a QR code as a base64 Data URL.
- * The QR encodes a JSON payload with coupon code, name, and team.
+ * Generate a QR code URL using a hosted service.
+ * Email clients (Gmail, Outlook, etc.) block base64 data URLs in <img> tags,
+ * so we use api.qrserver.com to get a real hosted image URL.
+ * The QR encodes a JSON payload with the unique registration ID and coupon code.
  */
-export async function generateQRDataURL(payload: {
+export function generateQRCodeURL(payload: {
+    id: string;
     couponCode: string;
-    name: string;
-    teamName: string;
-}): Promise<string> {
+}): string {
     const data = JSON.stringify(payload);
-    const dataURL = await QRCode.toDataURL(data, {
-        width: 250,
-        margin: 2,
-        color: {
-            dark: '#000000',
-            light: '#ffffff',
-        },
-    });
-    return dataURL;
+    const encoded = encodeURIComponent(data);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
 }

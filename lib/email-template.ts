@@ -1,16 +1,19 @@
 interface CouponEmailParams {
-    name: string;
-    teamName: string;
-    couponCode: string;
-    qrDataURL: string;
-    foodPreference: 'veg' | 'non-veg';
+  name: string;
+  teamName: string;
+  couponCode: string;
+  qrCodeURL: string;
+  foodPreference: 'veg' | 'non-veg';
+  totalRegistrations: number;
+  vegCount: number;
+  nonVegCount: number;
 }
 
 export function buildCouponEmailHTML(params: CouponEmailParams): string {
-    const { name, teamName, couponCode, qrDataURL, foodPreference } = params;
-    const foodLabel = foodPreference === 'veg' ? '🟢 Vegetarian' : '🔴 Non-Vegetarian';
+  const { name, teamName, couponCode, qrCodeURL, foodPreference, totalRegistrations, vegCount, nonVegCount } = params;
+  const foodLabel = foodPreference === 'veg' ? '🟢 Vegetarian' : '🔴 Non-Vegetarian';
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,6 +76,42 @@ export function buildCouponEmailHTML(params: CouponEmailParams): string {
                 </tr>
               </table>
 
+              <!-- Registration Counts -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#edf2f7;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-bottom:8px;">Total Registrations</td>
+                      </tr>
+                      <tr>
+                        <td style="color:#2d3748;font-size:20px;font-weight:700;padding-bottom:14px;">${totalRegistrations}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom:6px;">
+                          <table cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-right:24px;">🟢 Veg</td>
+                              <td style="color:#2d3748;font-size:15px;font-weight:600;">${vegCount}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <table cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding-right:24px;">🔴 Non-Veg</td>
+                              <td style="color:#2d3748;font-size:15px;font-weight:600;">${nonVegCount}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
               <!-- Verification Code -->
               <div style="text-align:center;margin-bottom:24px;">
                 <p style="margin:0 0 8px;color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;">
@@ -88,7 +127,7 @@ export function buildCouponEmailHTML(params: CouponEmailParams): string {
                 <p style="margin:0 0 12px;color:#718096;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;">
                   Scan QR Code
                 </p>
-                <img src="${qrDataURL}" alt="Food Coupon QR Code" width="200" height="200" style="border-radius:8px;border:1px solid #e2e8f0;" />
+                <img src="${qrCodeURL}" alt="Food Coupon QR Code" width="200" height="200" style="border-radius:8px;border:1px solid #e2e8f0;" />
               </div>
 
             </td>

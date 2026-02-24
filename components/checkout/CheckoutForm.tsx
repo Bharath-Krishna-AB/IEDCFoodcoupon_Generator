@@ -140,6 +140,19 @@ export default function CheckoutForm({ totalPrice, foodPreference, onBack }: Che
                         <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
+                                    Team Name <span className={styles.required}>*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Enter your team name"
+                                    value={teamName}
+                                    onChange={(e) => setTeamName(e.target.value)}
+                                />
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>
                                     Full Name <span className={styles.required}>*</span>
                                 </label>
                                 <input
@@ -191,18 +204,6 @@ export default function CheckoutForm({ totalPrice, foodPreference, onBack }: Che
                                 />
                             </div>
 
-                            <div className={styles.formGroup}>
-                                <label className={styles.label}>
-                                    Team Name <span className={styles.required}>*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className={styles.input}
-                                    placeholder="Enter your team name"
-                                    value={teamName}
-                                    onChange={(e) => setTeamName(e.target.value)}
-                                />
-                            </div>
                         </form>
                     </div>
 

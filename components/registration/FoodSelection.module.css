@@ -62,7 +62,7 @@
 }
 
 .optionCard.active {
-    border-color: var(--accent-purple);
+    border-color: #703eff;
     background-color: #fafafa;
 }
 
@@ -96,7 +96,7 @@
 }
 
 .active .optionPrice {
-    color: var(--accent-purple);
+    color: #703eff;
 }
 
 .radioIndicator {
@@ -111,14 +111,14 @@
 }
 
 .active .radioIndicator {
-    border-color: var(--accent-purple);
+    border-color: #703eff;
 }
 
 .radioInner {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: var(--accent-purple);
+    background-color: #703eff;
 }
 
 .actionContainer {

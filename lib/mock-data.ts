@@ -32,3 +32,10 @@ export function getRegistrations(): Registration[] {
 export function getRegistrationByCode(couponCode: string): Registration | undefined {
   return registrations.find((r) => r.couponCode === couponCode);
 }
+
+export function getRegistrationCounts(): { total: number; veg: number; nonVeg: number } {
+  const total = registrations.length;
+  const veg = registrations.filter((r) => r.foodPreference === 'veg').length;
+  const nonVeg = registrations.filter((r) => r.foodPreference === 'non-veg').length;
+  return { total, veg, nonVeg };
+}

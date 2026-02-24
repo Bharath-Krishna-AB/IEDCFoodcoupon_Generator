@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { generateCode, generateQRDataURL } from '@/lib/coupon';
+import { generateCode, generateQRCodeURL } from '@/lib/coupon';
 import { buildCouponEmailHTML } from '@/lib/email-template';
-import { saveRegistration } from '@/lib/mock-data';
+import { saveRegistration, getRegistrationCounts } from '@/lib/mock-data';
 
 interface SendCouponBody {
     name: string;
@@ -35,12 +35,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Generate coupon code and QR
+        // Generate coupon code
         const couponCode = generateCode();
-        const qrDataURL = await generateQRDataURL({ couponCode, name, teamName });
 
-        // Save to mock data store
-        saveRegistration({
+        // Save to mock data store (returns registration with unique id)
+        const registration = saveRegistration({
             name,
             email,
             phone,
@@ -50,13 +49,25 @@ export async function POST(request: NextRequest) {
             couponCode,
         });
 
+        // Generate QR code URL using the unique registration ID
+        const qrCodeURL = generateQRCodeURL({
+            id: registration.id,
+            couponCode,
+        });
+
+        // Get current registration counts
+        const counts = getRegistrationCounts();
+
         // Build email HTML
         const html = buildCouponEmailHTML({
             name,
             teamName,
             couponCode,
-            qrDataURL,
+            qrCodeURL,
             foodPreference,
+            totalRegistrations: counts.total,
+            vegCount: counts.veg,
+            nonVegCount: counts.nonVeg,
         });
 
         // Send email via Resend

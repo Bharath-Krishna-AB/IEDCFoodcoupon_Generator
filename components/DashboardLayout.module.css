@@ -16,3 +16,15 @@
     flex: 1;
     overflow-y: auto;
 }
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+    .layoutWrapper {
+        flex-direction: column;
+    }
+
+    .pageContent {
+        padding: 0 16px 100px 16px; 
+        /* Add bottom padding to prevent content from hiding behind sticky nav */
+    }
+}

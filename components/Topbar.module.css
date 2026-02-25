@@ -133,3 +133,29 @@
     width: 14px;
     height: 14px;
 }
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+    .topbar {
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .searchContainer {
+        width: 100%;
+        order: 2;
+    }
+
+    .actions {
+        order: 1;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .profileInfo {
+        display: none;
+        /* Hide text to save space on mobile */
+    }
+}

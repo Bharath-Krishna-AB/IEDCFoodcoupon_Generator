@@ -646,3 +646,41 @@
         transform: translate3d(4px, 0, 0);
     }
 }
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+    .container {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .searchContainer {
+        width: 100%;
+        max-width: none;
+    }
+
+    .tabsContainer {
+        gap: 20px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tableContainer {
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 800px;
+    }
+
+    .modalContent {
+        padding: 32px 24px;
+    }
+}
